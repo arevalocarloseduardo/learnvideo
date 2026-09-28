@@ -1,9 +1,9 @@
 # Cómo hacerlo andar
 
 Guía para probar learnvideo en tu compu, o para pasársela a tu agente (Claude Code, Codex,
-Cursor…). Al final tenés la app en **http://localhost:8765** con un proyecto de prueba listo:
-**«¿El perro renguea?»**. Vos le enseñás con clips de YouTube, la IA predice clips nuevos y vos
-le decís si acertó.
+Cursor…). Al final tenés la app en **http://localhost:8765** con el proyecto **«¿Está
+preñada?»**: le enseñás a la IA con ecografías bovinas, la IA predice ecografías que no vio y
+vos le decís si acertó.
 
 ¿Lo va a hacer tu agente? Saltá a [Para tu agente](#para-tu-agente).
 
@@ -86,14 +86,23 @@ hay API key, la app usa la API en lugar de la suscripción.
 **Sin IA, solo para ver la interfaz.** En el paso 5, arrancá con `LEARNVIDEO_IA=prueba` adelante
 del comando.
 
-## 4. Crear el proyecto de prueba
+## 4. Traer ecografías de prueba de YouTube
 
 ```bash
-uv run python scripts/candidatos.py --receta perros --activar
+uv run python scripts/candidatos.py --receta prenez --activar
 ```
 
-Busca en YouTube unos 130 videos cortos de perros, rengos y caminando normal, y deja el proyecto
-en uso. Solo lee los títulos: no baja ningún video.
+Busca en YouTube unos 150 videos de ecografías bovinas y anota qué dice cada título: preñada,
+vacía o las dos. Solo lee los títulos: no baja ningún video. Si ya tenés ecografías propias,
+podés saltear este paso e ir al [paso 7](#7-con-tus-propias-ecografías-la-prueba-en-serio).
+
+Dos cosas de estos videos:
+
+- **Hay muchas menos vacías que preñadas** (unas 20 contra 125), y casi todas las vacías son
+  del canal KeeboVet. Ese canal también tiene unas 60 preñadas, así que la IA no puede adivinar
+  la respuesta por el canal.
+- **Muchos videos arrancan mostrando al veterinario, la vaca o el equipo**, y recién después la
+  ecografía. Esos clips se descartan a mano (paso 6).
 
 ## 5. Levantar la app
 
@@ -101,8 +110,8 @@ en uso. Solo lee los títulos: no baja ningún video.
 uv run uvicorn app.main:app --port 8765
 ```
 
-Abrí http://localhost:8765. Arriba a la izquierda tiene que decir «¿El perro renguea?». Abajo,
-en «Motor de IA», tocá **Probar conexión**: tiene que quedar en «Conectado».
+Abrí http://localhost:8765. Arriba a la izquierda tiene que decir «¿Está preñada?». Abajo, en
+«Motor de IA», tocá **Probar conexión**: tiene que quedar en «Conectado».
 
 Dejá esa terminal abierta mientras la usás: ahí corren la descarga y el procesado de videos.
 Para frenarla, Ctrl+C. Todo queda guardado en `data/`: si la volvés a levantar, sigue donde
@@ -110,25 +119,49 @@ estaba.
 
 ## 6. Probar el circuito (unos 40 minutos)
 
-1. **Cargar.** En «Videos que encontré en YouTube», tildá «todos» en «Renguea» y en «Muestran
-   las dos». En «Camina normal», elegí unos 30 videos. Tocá **Importar seleccionados**. Se bajan
-   de a uno, alternando rengos y normales. Cada video se corta en clips de hasta 12 segundos.
-2. **Enseñar.** Los clips aparecen apenas están listos. En cada uno respondé «Renguea», «Camina
-   normal» o «No se puede saber» (atajos `1` `2` `3`) y escribí en una línea qué ves: qué pata
-   no apoya, cómo cabecea. Guardá con `⌘↵` (o Ctrl+Enter). Si en el clip no se ve al perro
-   caminando, tocá **Descartar clip**. El título del video aparece como pista, pero la IA nunca
-   lo ve.
+1. **Cargar.** En «Videos que encontré en YouTube», tildá «todos» en «Vacía» y en «Muestran las
+   dos». En «Preñada», elegí unos 30 videos. Tocá **Importar seleccionados**. Se bajan de a uno,
+   alternando vacías y preñadas, y primero los más cortos. Cada video se corta en clips de hasta
+   12 segundos.
+2. **Enseñar.** Los clips aparecen apenas están listos.
+   - Si el clip no muestra la ecografía (se ve al veterinario, la vaca, un logo o una
+     explicación), tocá **Descartar clip**.
+   - Si la muestra, respondé «Preñada», «Vacía» o «No se puede saber» (atajos `1` `2` `3`).
+     Escribí en una línea qué ves y dónde: la vesícula con líquido (lo negro), el embrión, el
+     latido, los placentomas; o, en una vacía, el útero sin líquido.
+   - Decí «Vacía» solo si el clip recorre bien el útero. Si no se llega a ver, poné «No se puede
+     saber».
+   - Guardá con `⌘↵` (o Ctrl+Enter). El título del video aparece como pista, pero la IA nunca lo
+     ve.
 3. **Validar.** Con 5 clips enseñados de cada respuesta ya puede predecir. Tocá **Predecir una
    tanda**: la IA mira 10 clips que no vio, en unos 2 minutos. Por cada uno decile si acertó
    (`A`) o si se equivocó (`E`). Si se equivocó, marcá la respuesta correcta y qué tendría que
    haber visto. Cada validación también le enseña.
 4. **Resultados.** Después de 3 o 4 tandas, fijate si el acierto sube de una tanda a otra. Al
    final tocá **Comparar**: la app vuelve a predecir los clips validados con la IA sola, sin tus
-   ejemplos. Si la IA con tus ejemplos acierta más, está aprendiendo de lo que le enseñás.
+   ejemplos. Si la IA con tus ejemplos acierta más, está aprendiendo de lo que le enseñás. Mirá
+   también la tabla «¿Aprende lo que le enseñás o reconoce el canal?»: si acierta mucho más en
+   canales que ya vio que en canales nuevos, está reconociendo el canal y no la preñez.
 
-**Criterios** muestra el manual que la IA arma con tus explicaciones. Lo podés editar. Para
-crear otro tema, tocá el proyecto de arriba del menú: sirve cualquier pregunta de sí o no sobre
-un video.
+**Criterios** muestra el manual que la IA arma con tus explicaciones. Lo podés editar.
+
+## 7. Con tus propias ecografías (la prueba en serio)
+
+Los videos de YouTube sirven para ver que el circuito anda. La prueba que vale es con
+ecografías de un mismo veterinario:
+
+- **Un día de trabajo:** preñadas y vacías hechas con el mismo equipo. Si se puede, un video por
+  vaca, de 10 a 30 segundos, recorriendo bien el útero.
+- **Mejor exportarlos del ecógrafo** (por USB, en MP4 o MOV). Si no se puede, filmá la pantalla
+  con el celular apoyado y quieto, encuadrando solo la imagen y sin reflejos.
+- **Anotá el diagnóstico confirmado de cada vaca**, por ejemplo en el nombre del archivo, para
+  validar contra la verdad y no contra lo que parecía.
+- **Creá un proyecto aparte** para no mezclarlos con los de YouTube. Tocá el proyecto de arriba
+  del menú, andá a «Nuevo proyecto», poné la pregunta y las dos respuestas, y marcá «Imágenes en
+  blanco y negro».
+- **Subilos en Cargar**, en «O subí archivos de video». El texto fijo de la pantalla del equipo
+  (datos de la vaca, profundidad, logo) se tapa antes de que la IA lo vea. Con la pestaña «Lo que
+  ve la IA» lo podés revisar.
 
 ## Cuánto gasta
 
@@ -147,19 +180,32 @@ un video.
 | «El login de Claude Code venció o lo revocaron» | Corré `bash scripts/guardar_token.sh` de nuevo. No hace falta reiniciar. |
 | «No encontré el comando `claude`» | Instalá Claude Code (paso 1) o usá una API key. |
 | Un video queda en «error» | Tocá **Reintentar** en Cargar. YouTube a veces bloquea alguno: si sigue fallando, salteálo. |
+| Muchos clips no son ecografías | Descartalos: es normal en los videos de YouTube. Con videos propios no pasa. |
 | «Address already in use» | Ya hay algo en el puerto 8765: usá `--port 8766` y abrí esa dirección. |
 | El disco se llena | Borrá los originales de `data/videos/` que empiezan con `Youtube-`: los clips ya están cortados y, si hiciera falta, se vuelven a bajar. |
 | `ffmpeg` o `ffprobe` no encontrados | Instalalo (paso 1) y volvé a levantar la app. |
+
+## Otro tema de prueba: perros que renguean
+
+Hay un segundo proyecto de prueba, «¿El perro renguea?», con videos de YouTube más fáciles de
+juzgar a simple vista:
+
+```bash
+uv run python scripts/candidatos.py --receta perros --activar
+```
+
+Para volver a las vacas, tocá el proyecto de arriba del menú y elegí «¿Está preñada?». Cada
+proyecto guarda sus propios clips, ejemplos y manual: nada se mezcla.
 
 ## Para tu agente
 
 Pegale esto a tu agente, desde la carpeta donde quieras el proyecto:
 
 > Cloná https://github.com/arevalocarloseduardo/learnvideo y seguí su EMPEZAR.md para dejarme
-> learnvideo andando en http://localhost:8765 con el proyecto de perros. Instalá lo que falte.
-> El login de Claude lo hago yo: decime qué comando correr en mi terminal y esperame. No me
-> muestres ni pegues ningún token. Dejá el servidor corriendo en una terminal que yo pueda ver.
-> No importes ni bajes videos sin preguntarme.
+> learnvideo andando en http://localhost:8765 con el proyecto de ecografías bovinas
+> («¿Está preñada?»). Instalá lo que falte. El login de Claude lo hago yo: decime qué comando
+> correr en mi terminal y esperame. No me muestres ni pegues ningún token. Dejá el servidor
+> corriendo en una terminal que yo pueda ver. No importes ni bajes videos sin preguntarme.
 
 Reglas para el agente:
 

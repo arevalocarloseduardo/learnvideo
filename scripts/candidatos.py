@@ -25,10 +25,12 @@ VACA = re.compile(r"vaca|bovin|novilla|vaquillona|ganado|\bcows?\b|heifer|cattle
 ECO = re.compile(r"ecogra|ultras|ultrason|ultrasound|\bscan|sonogra|doppler|\beco\b|ecógrafo|ecografo", re.I)
 VACIA = re.compile(r"vac[ií]as?|no gestante|no pre[ñn]ada|vazias?|n[ãa]o prenhe|n[ãa]o gestante|\bopen\b|not pregnant|non[- ]?pregnant|\bempty\b|útero normal|utero normal", re.I)
 PRENADA = re.compile(r"pre[ñn]|gestaci|gesta[çc][ãa]o|prenhe|pregnan|\bd[ií]as\b|\bdays?\b|feto|fetus|embri|embryo|sexaje|sexagem|gemel|twins|placentom|\bprenhez", re.I)
+# Tacto o cursos: casi no muestran la imagen del ecógrafo.
+SIN_ECO = re.compile(r"palpa|without ultrasound|sin ec[oó]grafo|sem ultrass|\bcurso\b|\bcourse\b|webinar|podcast", re.I)
 
 
 def pista_prenez(titulo: str) -> str | None:
-    if not (VACA.search(titulo) and ECO.search(titulo)):
+    if SIN_ECO.search(titulo) or not (VACA.search(titulo) and ECO.search(titulo)):
         return None
     vacia = VACIA.search(titulo)
     prenada = PRENADA.search(VACIA.sub(" ", titulo))

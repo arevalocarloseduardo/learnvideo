@@ -39,7 +39,7 @@ Necesita [uv](https://docs.astral.sh/uv/) y `ffmpeg`. El detalle está en [EMPEZ
 
 ```bash
 uv sync
-uv run python scripts/candidatos.py --receta perros --activar
+uv run python scripts/candidatos.py --receta prenez --activar
 uv run uvicorn app.main:app --port 8765
 ```
 
@@ -67,8 +67,8 @@ corras con `!` en el chat, así el token no queda en la conversación. No hace f
 no baja nada), anota la respuesta que sugiere cada título y crea el proyecto:
 
 ```bash
+uv run python scripts/candidatos.py --receta prenez --activar   # ecografías bovinas
 uv run python scripts/candidatos.py --receta perros --activar   # cojera en perros
-uv run python scripts/candidatos.py --receta prenez             # ecografías bovinas
 ```
 
 Quedan en `data/candidatos-perros.json` y `data/candidatos.json`, y se importan desde
