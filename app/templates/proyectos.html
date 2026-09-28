@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block titulo %}Proyectos{% endblock %}
+{% block contenido %}
+<header class="cabecera">
+  <p class="rotulo">Proyectos</p>
+  <h1>¿Qué le estás enseñando?</h1>
+  <p class="bajada">Cada proyecto es una pregunta sobre videos, con sus propios clips, ejemplos y manual. Cambiar de proyecto no borra ni mezcla nada.</p>
+</header>
+
+<section aria-label="Tus proyectos">
+  <ul class="proyectos">
+    {% for x in proyectos %}
+    <li class="proyecto panel" {% if x.activo %}aria-current="true"{% endif %}>
+      <div class="proyecto-texto">
+        <p class="rotulo">{{ x.nombre }}</p>
+        <h2>{{ x.pregunta }}</h2>
+        <p class="proyecto-respuestas tenue">{{ x.opciones[0].nombre }} o {{ x.opciones[1].nombre|lower }}{% if x.gris %} · en blanco y negro{% endif %}</p>
+      </div>
+      <dl class="proyecto-datos">
+        <div><dt>Videos</dt><dd class="dato">{{ x.videos }}</dd></div>
+        <div><dt>Clips</dt><dd class="dato">{{ x.clips }}</dd></div>
+        <div><dt>Ejemplos</dt><dd class="dato">{{ x.ejemplos }}</dd></div>
+        <div><dt>Tandas</dt><dd class="dato">{{ x.tandas }}</dd></div>
+      </dl>
+      <div class="proyecto-accion">
+        {% if x.activo %}<span class="chip">en uso</span>
+        {% else %}<button class="boton" type="button" data-activar="{{ x.id }}"><span class="boton-texto">Usar este</span></button>{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="mensaje" role="status" data-mensaje></p>
+</section>
+
+<section class="seccion" aria-labelledby="h-nuevo">
+  <h2 id="h-nuevo">Nuevo proyecto</h2>
+  <p class="tenue" style="max-width:70ch">Sirve para cualquier pregunta de sí o no sobre un video. La IA arranca sin saber nada del tema: aprende de los clips que le expliques.</p>
+  <form class="panel form-proyecto" id="form-proyecto" novalidate>
+    <div class="campo">
+      <label for="p-nombre">Nombre</label>
+      <input type="text" id="p-nombre" name="nombre" maxlength="80" placeholder="Soldaduras del taller" autocomplete="off">
+    </div>
+    <div class="campo">
+      <label for="p-pregunta">Pregunta</label>
+      <input type="text" id="p-pregunta" name="pregunta" maxlength="120" placeholder="¿La soldadura está bien hecha?" autocomplete="off">
+      <span class="ayuda">De sí o no, sobre algo que se vea en el video.</span>
+    </div>
+    <div class="campos-par">
+      <div class="campo">
+        <label for="p-si">Respuesta del sí</label>
+        <input type="text" id="p-si" name="si" maxlength="40" placeholder="Bien hecha" autocomplete="off">
+      </div>
+      <div class="campo">
+        <label for="p-no">Respuesta del no</label>
+        <input type="text" id="p-no" name="no" maxlength="40" placeholder="Con defectos" autocomplete="off">
+      </div>
+      <span class="ayuda muy-tenue campos-par-nota">«No se puede saber» se agrega sola.</span>
+    </div>
+    <div class="campo">
+      <label for="p-contexto">Qué muestran los videos</label>
+      <textarea id="p-contexto" name="contexto" rows="3" placeholder="Cordones de soldadura filmados de cerca mientras se hacen, en el taller."></textarea>
+      <span class="ayuda">La IA lo lee antes de cada clip. Contá qué se filma y cómo; cómo decidir lo aprende de tus ejemplos.</span>
+    </div>
+    <div class="campo">
+      <label for="p-ejemplo">Ejemplo de explicación <span class="muy-tenue" style="font-weight:400">(opcional)</span></label>
+      <input type="text" id="p-ejemplo" name="ejemplo" maxlength="200" placeholder="Ej.: el cordón queda parejo, sin poros y con el mismo ancho de punta a punta." autocomplete="off">
+      <span class="ayuda">Aparece como guía cuando enseñás.</span>
+    </div>
+    <label class="casilla">
+      <input type="checkbox" name="gris">
+      <span>Imágenes en blanco y negro, como ecografías o rayos X<span class="muy-tenue">: la IA las ve en gris y se descartan los clips con mucho color.</span></span>
+    </label>
+    <div class="acciones">
+      <button class="boton boton--primario" type="submit"><span class="boton-texto">Crear proyecto</span></button>
+      <p class="mensaje" role="status" data-mensaje></p>
+    </div>
+  </form>
+</section>
+{% endblock %}

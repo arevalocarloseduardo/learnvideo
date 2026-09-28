@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block titulo %}Criterios{% endblock %}
+{% block contenido %}
+{% set actual = versiones[0] if versiones else none %}
+<header class="cabecera">
+  <p class="rotulo">Manual de criterios</p>
+  <h1>Lo que aprendió hasta ahora</h1>
+  <p class="bajada">La IA lo reescribe con tus explicaciones y tus correcciones antes de cada tanda, y lo lee antes de decidir cada clip. Si algo está mal, corregilo acá.</p>
+</header>
+
+<div id="criterios" data-version="{{ actual.version if actual else 0 }}">
+  {% if actual %}
+  <p class="muy-tenue" style="margin-bottom:var(--e-4)">
+    <span class="dato">v{{ actual.version }}</span> · {{ 'editado por vos' if actual.origen == 'editado' else 'escrito por la IA' }} ·
+    con <span class="dato">{{ actual.n_ejemplos }}</span> ejemplos · {{ actual.creado }} UTC
+    {% if actual.n_ejemplos < n_ejemplos %} · <strong style="color:var(--texto)">hay {{ n_ejemplos - actual.n_ejemplos }} ejemplos nuevos que todavía no incorporó</strong>{% endif %}
+  </p>
+  <div class="panel">
+    <div class="manual" data-lectura>{{ actual.texto|md }}</div>
+    <form class="campo" data-edicion hidden>
+      <label for="texto-manual">Editá el manual</label>
+      <textarea id="texto-manual" rows="18">{{ actual.texto }}</textarea>
+      <span class="ayuda">Títulos con «## », viñetas con «- ». Solo criterios que se vean en la imagen.</span>
+      <div class="acciones">
+        <button class="boton boton--primario" type="submit"><span class="boton-texto">Guardar</span></button>
+        <button class="boton boton--fantasma" type="button" data-cancelar>Cancelar</button>
+      </div>
+    </form>
+  </div>
+  <div class="acciones" style="margin-top:var(--e-4)">
+    <button class="boton" type="button" data-editar>Editar</button>
+    <button class="boton" type="button" data-reescribir {% if ocupado %}disabled{% endif %}><span class="boton-texto">{% if ocupado %}La IA está ocupada{% else %}Reescribir ahora con la IA{% endif %}</span></button>
+    <p class="mensaje" role="status" data-mensaje></p>
+  </div>
+  {% else %}
+  <div class="panel vacio">
+    <h2>Todavía no hay manual</h2>
+    <p class="tenue">Se escribe solo antes de la primera tanda, con las explicaciones que le diste al enseñar. {% if n_ejemplos %}Ya hay {{ n_ejemplos }} ejemplos: podés pedirlo ahora.{% endif %}</p>
+    <div class="acciones">
+      {% if n_ejemplos %}<button class="boton boton--primario" type="button" data-reescribir {% if ocupado %}disabled{% endif %}><span class="boton-texto">Escribir el manual ahora</span></button>
+      {% else %}<a class="boton boton--primario" href="/ensenar">Enseñar</a>{% endif %}
+      <p class="mensaje" role="status" data-mensaje></p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if versiones|length > 1 %}
+<section class="seccion" aria-labelledby="titulo-versiones">
+  <h2 id="titulo-versiones">Versiones anteriores</h2>
+  <div>
+    {% for v in versiones[1:] %}
+    <details class="version">
+      <summary><span class="dato">v{{ v.version }}</span><span class="tenue">{{ 'editado por vos' if v.origen == 'editado' else 'escrito por la IA' }} · {{ v.n_ejemplos }} ejemplos · {{ v.creado }} UTC</span></summary>
+      <div class="manual" style="margin-top:var(--e-3)">{{ v.texto|md }}</div>
+    </details>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

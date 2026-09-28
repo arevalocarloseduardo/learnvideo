@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block titulo %}Resultados{% endblock %}
+{% block contenido %}
+{% set si = p.opciones[0] %}{% set no = p.opciones[1] %}
+{% set e = r.variantes.get('ia_ensenada') %}
+<header class="cabecera">
+  <p class="rotulo">Resultados</p>
+  <h1>¿Está aprendiendo?</h1>
+  <p class="bajada">Cada número sale de clips que la IA predijo antes de que vos los vieras, sin ejemplos del mismo video. Es un examen honesto.</p>
+</header>
+
+{% if not r.hay_datos %}
+<div class="panel vacio">
+  <h2>Todavía no hay resultados</h2>
+  <p class="tenue">Cuando valides la primera tanda, acá aparecen el acierto y la curva.</p>
+  <a class="boton boton--primario" href="/validar">Ir a validar</a>
+</div>
+{% else %}
+{% set ultima = e.curva[-1] %}
+<section class="figura" style="margin-top:0" aria-labelledby="h-ultima">
+  <p class="rotulo" id="h-ultima">Acierto en la última tanda · IA con ejemplos y explicaciones</p>
+  <p class="figura-valor">{{ ultima.acierto|pct }}</p>
+  <p class="figura-pie">{{ ultima.aciertos }} de {{ ultima.n }} clips, con {{ ultima.n_ejemplos }} ejemplos.
+    {% if e.curva|length > 1 %}La primera tanda acertó {{ e.curva[0].acierto|pct }} con {{ e.curva[0].n_ejemplos }}.{% endif %}</p>
+</section>
+
+<section class="fichas seccion" aria-label="Acierto acumulado">
+  <div class="ficha"><span class="rotulo">Acumulado</span><span class="ficha-valor">{{ e.acierto|pct }}</span><span class="ficha-pie">{{ e.aciertos }} de {{ e.n }} clips</span></div>
+  <div class="ficha"><span class="rotulo">Cuando era «{{ si.nombre }}»</span><span class="ficha-valor">{{ e.por_clase[si.id].acierto|pct }}</span><span class="ficha-pie">{{ e.por_clase[si.id].n }} clips</span></div>
+  <div class="ficha"><span class="rotulo">Cuando era «{{ no.nombre }}»</span><span class="ficha-valor">{{ e.por_clase[no.id].acierto|pct }}</span><span class="ficha-pie">{{ e.por_clase[no.id].n }} clips</span></div>
+  <div class="ficha"><span class="rotulo">Dijo «no se sabe»</span><span class="ficha-valor">{{ e.abstencion|pct }}</span><span class="ficha-pie">cuenta como error</span></div>
+</section>
+
+<section class="seccion" aria-labelledby="h-curva">
+  <h2 id="h-curva">Acierto por tanda, según cuántos ejemplos tenía</h2>
+  <div class="leyenda" aria-hidden="true">
+    <span><i style="background:var(--serie-1)"></i>IA con ejemplos y explicaciones</span>
+    {% if curva.clasificador %}<span><i style="background:var(--serie-contexto)"></i>Clasificador propio</span>{% endif %}
+  </div>
+  <figure class="grafico" id="grafico-curva" style="margin:0">
+    <script type="application/json" data-curva>{{ curva|tojson }}</script>
+    <div class="tooltip" hidden></div>
+  </figure>
+  <details class="tabla-equivalente">
+    <summary>Ver como tabla</summary>
+    <div class="tabla-marco">
+      <table>
+        <thead><tr><th>Tanda</th><th class="num">Ejemplos</th><th class="num">IA enseñada</th><th class="num">Clasificador</th><th class="num">Clips</th></tr></thead>
+        <tbody>
+          {% for punto in e.curva %}
+          {% set c = (curva.clasificador or [])|selectattr('tanda', 'equalto', punto.tanda)|first %}
+          <tr><td>Tanda {{ punto.tanda }}</td><td class="num">{{ punto.n_ejemplos }}</td><td class="num">{{ punto.acierto|pct }}</td><td class="num">{{ (c.acierto if c else none)|pct }}</td><td class="num">{{ punto.n }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<section class="seccion" aria-labelledby="h-comparar">
+  <h2 id="h-comparar">¿Cuánto suma enseñarle?</h2>
+  {% if r.comparacion and r.comparacion.get('ia_sola') %}
+  <p class="tenue">Sobre los mismos {{ r.n_comunes }} clips validados:</p>
+  <div class="barras">
+    {% for clave in ['ia_ensenada', 'ia_sin_explicaciones', 'clasificador', 'ia_sola'] if clave in r.comparacion %}
+    {% set m = r.comparacion[clave] %}
+    <div class="barra" data-protagonista="{{ 'true' if clave == 'ia_ensenada' else 'false' }}">
+      <span class="barra-nombre">{{ r.variantes[clave].nombre }}</span>
+      <span class="barra-pista" style="--v: {{ m.acierto or 0 }}"><span class="barra-lleno"></span></span>
+      <span class="valor">{{ m.acierto|pct }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="tenue" style="max-width:70ch">Para saber si las explicaciones sirven de verdad, corro los mismos clips con la IA sin enseñarle nada y con ejemplos pero sin tus explicaciones. Tarda un rato y usa la sesión de IA.</p>
+  {% endif %}
+  <div class="acciones">
+    <button class="boton" type="button" data-comparar {% if ocupado %}disabled{% endif %}><span class="boton-texto">{% if ocupado %}La IA está ocupada{% elif r.comparacion.get('ia_sola') %}Actualizar la comparación{% else %}Comparar{% endif %}</span></button>
+    <p class="mensaje" role="status" data-mensaje></p>
+  </div>
+</section>
+
+{% if r.canales %}
+<section class="seccion" aria-labelledby="h-canales">
+  <h2 id="h-canales">¿Aprende lo que le enseñás o reconoce el canal?</h2>
+  <p class="tenue" style="max-width:70ch">Si acierta mucho más en canales que ya vio al aprender, puede estar reconociendo el equipo, el lugar o el estilo del video en lugar de lo que le enseñaste.</p>
+  <div class="tabla-marco">
+    <table>
+      <thead><tr><th></th><th class="num">Canal que ya vio</th><th class="num">Canal nuevo</th></tr></thead>
+      <tbody>
+        {% for clave, c in r.canales.items() %}
+        <tr><td>{{ r.variantes[clave].nombre }}</td>
+          <td class="num">{{ c.conocido.acierto|pct }} <span class="muy-tenue">({{ c.conocido.n }})</span></td>
+          <td class="num">{{ c.nuevo.acierto|pct }} <span class="muy-tenue">({{ c.nuevo.n }})</span></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<section class="seccion" aria-labelledby="h-matriz">
+  <h2 id="h-matriz">Dónde se equivoca</h2>
+  <div class="tabla-marco" style="max-width:640px">
+    <table class="matriz">
+      <thead><tr><th>Era ↓ · Dijo →</th>{% for k in r.orden %}<th>{{ p.nombres[k] }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for real in r.orden %}
+        <tr><th style="text-align:left">{{ p.nombres[real] }}</th>
+          {% for dijo in r.orden %}<td class="num" style="text-align:center{% if real == dijo and r.matriz[real][dijo] %};font-weight:600{% endif %}">{{ r.matriz[real][dijo] }}</td>{% endfor %}</tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if r.errores %}
+  <div class="errores" style="margin-top:var(--e-3)">
+    {% for f in r.errores %}
+    <div class="error-item">
+      <img src="/media/{{ f.miniatura }}" alt="" width="360" height="270" loading="lazy">
+      <div class="campo" style="gap:var(--e-1)">
+        <span><span class="chip chip--mal">dijo {{ p.nombres[f.respuesta]|lower }}</span> <span class="chip">era {{ p.nombres[f.respuesta_correcta]|lower }}</span> <span class="muy-tenue dato" style="font-size:.8125rem">tanda {{ f.tanda_id }}</span></span>
+        <span class="tenue">{{ f.por_que or 'Sin explicación de la corrección.' }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

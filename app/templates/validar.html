@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block titulo %}Validar{% endblock %}
+{% block contenido %}
+{% set si = p.opciones[0].nombre %}{% set no = p.opciones[1].nombre %}
+<div class="cabecera-fila">
+  <div class="cabecera" style="margin:0">
+    <p class="rotulo">Paso 3</p>
+    <h1>{% if item %}¿Acertó?{% else %}Validar{% endif %}</h1>
+  </div>
+  {% if tanda %}
+  <div class="reglas reglas--cabecera">
+    <div class="regla" style="grid-template-columns: 11ch 7ch minmax(0,1fr)">
+      <span>Tanda {{ tanda.id }}</span>
+      <span class="dato">{{ tanda.validadas or 0 }}/{{ tanda.total }}</span>
+      <span class="regla-pista" style="--v: {{ (tanda.validadas or 0) / tanda.total }}; background-size: {{ 100 / tanda.total }}% 6px"><span class="regla-lleno"></span></span>
+    </div>
+    <p class="muy-tenue" style="font-size:.8125rem">Primero te muestra los casos en los que más dudó. {% if tanda.estado == 'prediciendo' %}Predichos: {{ tanda.listas or 0 }} de {{ tanda.total }}.{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+
+{% if tanda and tanda.estado == 'error' %}
+  <div class="aviso aviso--error" style="margin-bottom:var(--e-4)">
+    <strong>La tanda {{ tanda.id }} se frenó.</strong> {{ tanda.error }}
+    <div class="acciones" style="margin-top:var(--e-3)">
+      <button class="boton" type="button" data-reintentar-tanda="{{ tanda.id }}"><span class="boton-texto">Reintentar</span></button>
+      <span class="mensaje" role="status" data-mensaje></span>
+    </div>
+  </div>
+{% endif %}
+
+{% if item %}
+<div class="trabajo">
+  <div>
+    {% with clip = item %}{% include "_visor.html" %}{% endwith %}
+    {% if item.pista %}
+    <div class="pista" style="margin-top:var(--e-3)">
+      <span class="rotulo">Según el video</span>
+      <strong>{{ p.nombres.get(item.pista, 'Muestra las dos') }}</strong>
+      <span class="muy-tenue" style="font-size:.8125rem">Pista del título para que valides. La IA no la vio.</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <section class="veredicto" data-clip="{{ item.clip_id }}" data-respuesta-ia="{{ item.respuesta }}">
+    <div>
+      <p class="rotulo">La IA dice</p>
+      <p class="veredicto-respuesta">{{ p.nombres[item.respuesta] }}</p>
+      {% with prob = item.prob_si, chico = false %}{% include "_calibre.html" %}{% endwith %}
+    </div>
+
+    <div class="campo">
+      <p class="rotulo">Por qué</p>
+      <p class="explicacion">{{ item.explicacion }}</p>
+      {% set senales = item.senales|cargar_json %}
+      {% if senales %}<ul class="senales">{% for s in senales %}<li>{{ s }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+
+    {% set vecinos = item.vecinos|cargar_json %}
+    {% if vecinos %}
+    <div class="campo">
+      <p class="rotulo">Casos que le enseñaste y se parecen</p>
+      <div class="parecidos">
+        {% for v in vecinos %}
+        <div class="parecido" data-elegido="{{ 'true' if v.elegido else 'false' }}">
+          <img src="/media/{{ v.miniatura }}" alt="" width="360" height="270" loading="lazy">
+          <span><strong style="color:var(--texto)">{{ p.nombres[v.respuesta] }}</strong> · <span class="dato">{{ (v.similitud * 100)|round|int }}%</span> parecido{% if v.elegido %} · <em>el que más usó</em>{% endif %}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if item.clasificador and item.clasificador.respuesta %}
+    <div class="segunda-opinion">
+      <p class="rotulo">Segunda opinión · clasificador propio</p>
+      <p class="tenue" style="font-size:.9375rem">Solo compara huellas con tus ejemplos: dice <strong style="color:var(--texto)">{{ p.nombres[item.clasificador.respuesta] }}</strong>.</p>
+      {% with prob = item.clasificador.prob_si, chico = true %}{% include "_calibre.html" %}{% endwith %}
+    </div>
+    {% endif %}
+
+    <div class="acciones decision-fija">
+      <button class="boton boton--primario" type="button" data-acerto><span class="boton-texto">Acertó</span> <span class="tecla">A</span></button>
+      <button class="boton" type="button" data-se-equivoco>Se equivocó <span class="tecla">E</span></button>
+      <p class="mensaje" role="status" data-mensaje></p>
+    </div>
+
+    <form class="correccion" id="form-correccion" hidden>
+      <fieldset class="opciones">
+        <legend>¿Cuál era la respuesta?</legend>
+        {% for o in p.todas if o.id != item.respuesta %}
+        <div class="opcion">
+          <input type="radio" name="respuesta_correcta" id="c-{{ o.id }}" value="{{ o.id }}" required {% if item.pista == o.id %}checked{% endif %}>
+          <label for="c-{{ o.id }}">{{ o.nombre }}</label>
+        </div>
+        {% endfor %}
+      </fieldset>
+      <div class="campo">
+        <label for="por-que">¿Qué tendría que haber visto?</label>
+        <textarea id="por-que" name="por_que" rows="4" placeholder="Ej.: qué se ve en el clip que la IA pasó por alto o interpretó mal."></textarea>
+        <span class="ayuda">Esta corrección entra al manual de criterios en la próxima tanda.</span>
+      </div>
+      <div class="acciones">
+        <button class="boton boton--primario" type="submit"><span class="boton-texto">Guardar corrección</span> <span class="tecla">⌘↵</span></button>
+        <button class="boton boton--fantasma" type="button" data-cancelar>Cancelar</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+{% elif tanda and tanda.estado == 'prediciendo' %}
+<div class="trabajo" data-esperando-tanda>
+  <div class="visor"><div class="visor-medio esqueleto"></div></div>
+  <div class="decision">
+    <p class="rotulo">La IA está mirando los clips</p>
+    <p style="font-size:var(--t-2)">{{ tanda.listas or 0 }} de {{ tanda.total }} listos. El primero aparece acá apenas esté.</p>
+    <p class="tenue">Antes de predecir reescribe el manual de criterios con todo lo que le enseñaste. Cada clip tarda entre 20 y 60 segundos.</p>
+  </div>
+</div>
+
+{% elif not tanda %}
+<div class="panel vacio">
+  {% if not progreso.listo %}
+    <h2>Todavía le falta aprender</h2>
+    <p class="tenue">Para predecir necesita al menos {{ config.MINIMO_POR_CLASE }} ejemplos de cada respuesta. Faltan
+      {% for k, n in progreso.faltan.items() if n %}{{ n }} de «{{ p.nombres[k] }}»{% if not loop.last %} y {% endif %}{% endfor %}.</p>
+    <a class="boton boton--primario" href="/ensenar">Enseñar</a>
+  {% elif not libres %}
+    <h2>No quedan clips sin usar</h2>
+    <p class="tenue">Todo lo cargado ya está enseñado o validado. Cargá más videos para otra tanda.</p>
+    <a class="boton boton--primario" href="/cargar">Cargar videos</a>
+  {% else %}
+    <h2>Predecir {{ [config.TANDA, libres]|min }} clips que la IA no vio</h2>
+    <p class="tenue">Va a usar los {{ progreso.total }} ejemplos que le enseñaste. Vos después le decís si acertó; cada acierto y cada error cuentan para la curva.</p>
+    <div class="acciones">
+      <button class="boton boton--primario" type="button" data-predecir><span class="boton-texto">Predecir una tanda</span></button>
+      <p class="mensaje" role="status" data-mensaje></p>
+    </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if cerradas %}
+<section class="seccion" aria-labelledby="titulo-cerradas">
+  <h2 id="titulo-cerradas">Tandas cerradas</h2>
+  <div class="tabla-marco">
+    <table>
+      <thead><tr><th>Tanda</th><th class="num">Ejemplos al predecir</th><th class="num">Acertó</th><th class="num">Acierto</th></tr></thead>
+      <tbody>
+        {% for t in cerradas %}
+        <tr><td>Tanda {{ t.id }}</td><td class="num">{{ t.n_ejemplos }}</td><td class="num">{{ t.aciertos or 0 }} de {{ t.n }}</td><td class="num">{{ ((t.aciertos or 0) / t.n if t.n else none)|pct }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block titulo %}Inicio{% endblock %}
+{% block contenido %}
+<header class="cabecera">
+  <p class="rotulo">{{ p.nombre }}</p>
+  <h1>{{ p.pregunta }}</h1>
+  <p class="bajada">Le enseñás con clips explicados, la IA predice clips que no vio y vos le decís si acertó. Cada corrección la mejora.</p>
+</header>
+
+<section class="panel siguiente" aria-labelledby="que-sigue">
+  <p class="rotulo" id="que-sigue">Qué sigue</p>
+  <p class="siguiente-texto">{{ paso.texto }}</p>
+  <a class="boton boton--primario" href="{{ paso.url }}">{{ paso.boton }}</a>
+</section>
+
+<section class="circuito" aria-label="Cómo viene el circuito">
+  <a class="tramo" href="/cargar">
+    <span class="tramo-num">1</span>
+    <span class="tramo-nombre">Cargar</span>
+    <span class="dato">{{ numeros.clips }} clips listos</span>
+    <span class="dato-sub">de {{ numeros.videos }} videos · {{ libres }} sin usar</span>
+  </a>
+  <a class="tramo" href="/ensenar">
+    <span class="tramo-num">2</span>
+    <span class="tramo-nombre">Enseñar</span>
+    <span class="dato">{{ progreso.total }} ejemplos</span>
+    <span class="dato-sub">{% for o in p.opciones %}{{ o.nombre }} {{ progreso.conteo.get(o.id, 0) }}{% if not loop.last %} · {% endif %}{% endfor %}</span>
+  </a>
+  <a class="tramo" href="/validar">
+    <span class="tramo-num">3</span>
+    <span class="tramo-nombre">Validar</span>
+    <span class="dato">{{ numeros.tandas }} {{ "tanda cerrada" if numeros.tandas == 1 else "tandas cerradas" }}</span>
+    <span class="dato-sub">de {{ config.TANDA }} clips cada una</span>
+  </a>
+</section>
+
+{% set ensenada = resumen.variantes.get('ia_ensenada') %}
+{% if ensenada %}
+  {% set ultima = ensenada.curva[-1] %}
+  <section class="figura" aria-labelledby="acierto-ultima">
+    <p class="rotulo" id="acierto-ultima">Acierto en la última tanda</p>
+    <p class="figura-valor">{{ ultima.acierto|pct }}</p>
+    <p class="figura-pie">{{ ultima.aciertos }} de {{ ultima.n }} clips, predichos con {{ ultima.n_ejemplos }} ejemplos. En total, {{ ensenada.aciertos }} de {{ ensenada.n }}. <a href="/resultados">Ver la curva</a></p>
+  </section>
+{% endif %}
+{% endblock %}

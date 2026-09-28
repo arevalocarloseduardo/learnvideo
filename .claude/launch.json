@@ -1,0 +1,35 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "learnvideo",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "uvicorn",
+        "app.main:app",
+        "--port",
+        "8765"
+      ],
+      "port": 8765
+    },
+    {
+      "name": "learnvideo-prueba",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "LEARNVIDEO_DATOS=data-prueba",
+        "LEARNVIDEO_IA=prueba",
+        "uv",
+        "run",
+        "uvicorn",
+        "app.main:app",
+        "--port",
+        "8766",
+        "--reload",
+        "--reload-dir",
+        "app"
+      ],
+      "port": 8766
+    }
+  ]
+}

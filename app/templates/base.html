@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{% endblock %} · learnvideo</title>
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/hanken-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ estatico('css/app.css') }}">
+  <script>
+    try { if (localStorage.getItem("tema") === "light") document.documentElement.dataset.theme = "light"; } catch (e) {}
+  </script>
+</head>
+<body data-pagina="{{ activo }}">
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <div class="marco">
+    <nav class="riel" aria-label="Secciones">
+      <a class="marca" href="/">learnvideo</a>
+      <a class="riel-proyecto" href="/proyectos" {% if activo == 'proyectos' %}aria-current="page"{% endif %}>
+        <span class="rotulo">Proyecto</span>
+        <span class="riel-proyecto-nombre">{{ p.pregunta }}</span>
+        <svg class="riel-proyecto-flechas" viewBox="0 0 12 16" width="12" height="16" aria-hidden="true"><path d="M3 6l3-3 3 3M3 10l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="visualmente-oculto">(cambiar de proyecto)</span>
+      </a>
+      <ol class="pasos">
+        <li><a href="/cargar" {% if activo == 'cargar' %}aria-current="page"{% endif %}><span class="paso-num">1</span>Cargar</a></li>
+        <li><a href="/ensenar" {% if activo == 'ensenar' %}aria-current="page"{% endif %}><span class="paso-num">2</span>Enseñar</a></li>
+        <li><a href="/validar" {% if activo == 'validar' %}aria-current="page"{% endif %}><span class="paso-num">3</span>Validar</a></li>
+        <li class="separador" role="presentation"></li>
+        <li><a href="/criterios" {% if activo == 'criterios' %}aria-current="page"{% endif %}><span class="paso-num"></span>Criterios</a></li>
+        <li><a href="/resultados" {% if activo == 'resultados' %}aria-current="page"{% endif %}><span class="paso-num"></span>Resultados</a></li>
+      </ol>
+      <div class="riel-pie">
+        <div class="estado-ia" id="estado-ia">
+          <span class="rotulo">Motor de IA</span>
+          <span class="linea"><span class="indicador" data-ok="{{ 'true' if ia.ok else ('false' if ia.ok == false else '') }}"></span><span data-motor>{{ ia.motor }}</span></span>
+          <span class="detalle" data-detalle>{% if ia.ok %}Conectado{% elif ia.ok == false %}{{ ia.detalle }}{% else %}Sin probar todavía{% endif %}</span>
+          <button class="boton boton--fantasma boton--chico" type="button" data-probar-ia><span class="boton-texto">Probar conexión</span></button>
+        </div>
+        <button class="boton boton--fantasma boton--chico" type="button" data-tema>Tema claro</button>
+      </div>
+    </nav>
+    <main id="contenido">
+      {% block contenido %}{% endblock %}
+    </main>
+  </div>
+  <script src="{{ estatico('js/app.js') }}" defer></script>
+</body>
+</html>

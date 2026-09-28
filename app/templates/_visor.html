@@ -1,0 +1,27 @@
+{# Visor de un clip: el video original y, en otra pestaña, lo que ve la IA. Espera `clip`. #}
+<div class="visor" data-visor>
+  <div class="visor-medio" data-panel="clip">
+    <video src="/media/{{ clip.archivo }}" autoplay muted loop playsinline controls preload="auto" width="960" height="720"></video>
+  </div>
+  <div class="visor-medio" data-panel="ia" hidden>
+    <img src="/media/{{ clip.hoja }}" alt="Los {{ config.CUADROS_POR_CLIP }} cuadros de este clip que recibe la IA" width="1554" height="774" loading="lazy">
+  </div>
+  <div class="visor-barra">
+    <div class="visor-pestanas" role="tablist" aria-label="Qué mostrar">
+      <button type="button" role="tab" aria-selected="true" data-pestana="clip">Clip</button>
+      <button type="button" role="tab" aria-selected="false" data-pestana="ia">Lo que ve la IA</button>
+    </div>
+    <span>clip {{ clip.clip_id if clip.clip_id is defined else clip.id }} · {{ clip.inicio|tiempo }}–{{ clip.fin|tiempo }}</span>
+  </div>
+</div>
+{% set recorte = clip.recorte|cargar_json if clip.recorte else {} %}
+<div class="meta-clip">
+  <span class="titulo-video">{{ clip.titulo or 'Video sin título' }}</span>
+  <span class="muy-tenue" style="font-size:.875rem">{{ clip.canal or 'Canal desconocido' }}{% if clip.url %} · <a href="{{ clip.url }}" target="_blank" rel="noopener">ver el original</a>{% endif %}</span>
+  {% if recorte and (recorte.avisos or recorte.tapado) %}
+  <div class="avisos">
+    {% if recorte.tapado %}<span class="chip" title="Se taparon textos fijos para que la IA no los lea">texto tapado</span>{% endif %}
+    {% for a in recorte.avisos %}<span class="chip">{{ a }}</span>{% endfor %}
+  </div>
+  {% endif %}
+</div>

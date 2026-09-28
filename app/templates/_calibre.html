@@ -1,0 +1,11 @@
+{# Calibre de confianza: mide la distancia entre la duda (50 %) y la probabilidad. Espera `prob`, `si`, `no` y opcional `chico`. #}
+{% set x = [[prob if prob is not none else 0.5, 0.0]|max, 1.0]|min %}
+<div class="calibre{% if chico %} calibre--chico{% endif %}" role="img" aria-label="Probabilidad de {{ si|lower }}: {{ x|pct }}"
+     style="--x: {{ x }}; --izq: {{ [x, 0.5]|min }}; --ancho: {{ (x - 0.5)|abs }}; --alinear: {{ '0%' if x < 0.12 else ('-100%' if x > 0.88 else '-50%') }}">
+  {% if not chico %}<span class="calibre-valor">{{ x|pct }} {{ si|lower }}</span>{% endif %}
+  <div class="calibre-regla"></div>
+  <span class="calibre-tramo"></span>
+  <span class="calibre-cruz" style="--x: 0.5"></span>
+  <span class="calibre-cruz"></span>
+  <div class="calibre-rotulos"><span>{{ no }}</span><span>duda</span><span>{{ si }}</span></div>
+</div>

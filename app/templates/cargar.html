@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block titulo %}Cargar{% endblock %}
+{% block contenido %}
+<header class="cabecera">
+  <p class="rotulo">Paso 1</p>
+  <h1>Cargar videos</h1>
+  <p class="bajada">Cada video se corta en clips de hasta {{ config.CLIP_LARGO }} segundos. La IA ve {{ config.CUADROS_POR_CLIP }} cuadros de cada clip, recortados a la zona que se mueve y con el texto fijo tapado.</p>
+</header>
+
+<div class="carga">
+  <form class="panel campo" id="form-enlaces">
+    <label for="enlaces">Pegá links de YouTube, TikTok o Instagram</label>
+    <textarea id="enlaces" name="enlaces" rows="5" placeholder="https://www.youtube.com/shorts/…&#10;Uno por línea"></textarea>
+    <div class="acciones">
+      <button class="boton boton--primario" type="submit"><span class="boton-texto">Agregar</span></button>
+      <p class="mensaje" role="status" data-mensaje></p>
+    </div>
+  </form>
+
+  <form class="panel campo" id="form-archivos">
+    <span style="font-weight:600">O subí archivos de video</span>
+    <label class="zona-archivos" for="archivos" data-zona>
+      <input id="archivos" name="archivos" type="file" accept="video/*" multiple>
+      <span>Arrastralos acá o <u>elegilos</u></span>
+      <span class="muy-tenue" data-elegidos>MP4, MOV o WEBM</span>
+    </label>
+    <div class="acciones">
+      <button class="boton" type="submit"><span class="boton-texto">Subir</span></button>
+      <p class="mensaje" role="status" data-mensaje></p>
+    </div>
+  </form>
+</div>
+
+{% if grupos %}
+<section class="seccion" aria-labelledby="titulo-candidatos">
+  <h2 id="titulo-candidatos">Videos que encontré en YouTube</h2>
+  <p class="tenue" style="max-width:70ch">La respuesta sale del título de cada video: te sirve de pista para etiquetar, pero la IA nunca la ve. Son para probar, no para el producto: ahí cada cliente usa sus propios videos.{% if escasa %} Hay menos de «{{ p.nombres[escasa] }}», así que conviene traerlos todos.{% endif %}</p>
+  <form id="form-candidatos" class="grupo-candidatos">
+    {% for clave, nombre, lista in grupos %}
+    <details class="panel" {% if clave == escasa or (not escasa and loop.first) %}open{% endif %}>
+      <summary>{{ nombre }} <span class="dato muy-tenue">{{ lista|length }}</span>
+        <label class="muy-tenue" style="margin-left:auto;font-weight:400;display:inline-flex;gap:8px;align-items:center">
+          <input type="checkbox" data-todos="{{ clave }}"> todos
+        </label>
+      </summary>
+      <ul class="lista-candidatos">
+        {% for c in lista %}
+        <li><label>
+          <input type="checkbox" name="ids" value="{{ c.origen_id }}" data-grupo="{{ clave }}">
+          <span class="titulo" title="{{ c.titulo }}">{{ c.titulo }}<span class="muy-tenue"> · {{ c.canal }}</span></span>
+          <span class="dato muy-tenue">{{ c.duracion|tiempo }}</span>
+        </label></li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endfor %}
+    <div class="acciones">
+      <button class="boton boton--primario" type="submit" disabled data-importar><span class="boton-texto">Importar seleccionados</span></button>
+      <p class="mensaje" role="status" data-mensaje></p>
+    </div>
+  </form>
+</section>
+{% endif %}
+
+<section class="seccion" aria-labelledby="titulo-cola">
+  <h2 id="titulo-cola">Videos cargados</h2>
+  <div id="cola">{% include "_cola.html" %}</div>
+</section>
+{% endblock %}

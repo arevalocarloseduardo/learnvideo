@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block titulo %}Enseñar{% endblock %}
+{% block contenido %}
+<div class="cabecera-fila">
+  <div class="cabecera" style="margin:0">
+    <p class="rotulo">Paso 2</p>
+    <h1>Enseñale con este clip</h1>
+  </div>
+  <div class="reglas reglas--cabecera" aria-label="Ejemplos por respuesta">
+    {% for o in p.todas %}
+    {% set n = progreso.conteo.get(o.id, 0) %}
+    <div class="regla">
+      <span>{{ o.nombre }}</span>
+      <span class="dato">{{ n }}</span>
+      <span class="regla-pista" style="--v: {{ n / 20 }}; --m: {{ config.MINIMO_POR_CLASE / 20 }}">
+        <span class="regla-lleno"></span>
+        {% if o in p.opciones %}<span class="regla-minimo" title="Mínimo para predecir: {{ config.MINIMO_POR_CLASE }}"></span>{% endif %}
+      </span>
+    </div>
+    {% endfor %}
+    <p class="muy-tenue" style="font-size:.8125rem">La raya marca el mínimo para predecir ({{ config.MINIMO_POR_CLASE }} de cada una). Con 20 de cada una aprende bastante mejor.</p>
+  </div>
+</div>
+
+{% if clip %}
+<div class="trabajo">
+  <div>{% include "_visor.html" %}</div>
+
+  <form class="decision" id="form-etiqueta" data-clip="{{ clip.id }}">
+    {% if clip.pista or clip.titulo %}
+    <div class="pista">
+      <span class="rotulo">Según el video</span>
+      {% if clip.pista in p.nombres %}<strong>{{ p.nombres[clip.pista] }}</strong>{% elif clip.pista == 'mixto' %}<strong>Muestra las dos respuestas</strong>{% endif %}
+      <span class="pista-titulo">«{{ clip.titulo }}»</span>
+      <span class="muy-tenue" style="font-size:.8125rem">Es la pista del título: vos decidís mirando la imagen. La IA no ve esto.</span>
+    </div>
+    {% endif %}
+
+    <fieldset class="opciones">
+      <legend>{{ p.pregunta }}</legend>
+      {% for o in p.todas %}
+      <div class="opcion">
+        <input type="radio" name="respuesta" id="r-{{ o.id }}" value="{{ o.id }}" {% if clip.etiqueta == o.id %}checked{% endif %} required>
+        <label for="r-{{ o.id }}">{{ o.nombre }} <span class="tecla">{{ loop.index }}</span></label>
+      </div>
+      {% endfor %}
+    </fieldset>
+
+    <div class="campo">
+      <label for="explicacion">¿Qué ves que te lo dice?</label>
+      <textarea id="explicacion" name="explicacion" rows="4" placeholder="{{ p.ejemplo or 'Ej.: qué ves, en qué parte de la imagen y en qué momento del clip.' }}">{{ clip.etiqueta_explicacion or '' }}</textarea>
+      <span class="ayuda">Nombrá lo que se ve y dónde. Con estas explicaciones la IA arma su manual de criterios.</span>
+    </div>
+
+    <div class="acciones decision-fija">
+      <button class="boton boton--primario" type="submit"><span class="boton-texto">Guardar y seguir</span> <span class="tecla">⌘↵</span></button>
+      <button class="boton boton--fantasma" type="button" data-descartar="{{ clip.id }}">Descartar clip</button>
+    </div>
+    <p class="mensaje" role="status" data-mensaje></p>
+  </form>
+</div>
+{% else %}
+<div class="vacio panel">
+  {% if en_proceso %}
+    <h2>Se están procesando {{ en_proceso }} videos</h2>
+    <p class="tenue">Los clips aparecen acá apenas estén listos. Esta página se actualiza sola.</p>
+    <span data-recargar="5000"></span>
+  {% else %}
+    <h2>No quedan clips para enseñar</h2>
+    <p class="tenue">Cargá más videos o, si ya tenés al menos {{ config.MINIMO_POR_CLASE }} ejemplos de cada respuesta, pasá a validar.</p>
+    <div class="acciones">
+      <a class="boton boton--primario" href="/cargar">Cargar videos</a>
+      {% if progreso.listo %}<a class="boton" href="/validar">Ir a validar</a>{% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if recientes %}
+<section class="seccion" aria-labelledby="titulo-recientes">
+  <h2 id="titulo-recientes" style="font-size:var(--t-1)">Lo último que le enseñaste <span class="muy-tenue" style="font-weight:400">· tocá uno para corregirlo</span></h2>
+  <div class="tira">
+    {% for r in recientes %}
+    <a href="/ensenar?clip={{ r.id }}"><img src="/media/{{ r.miniatura }}" alt="" width="360" height="270" loading="lazy">{{ p.nombres[r.respuesta] }}</a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

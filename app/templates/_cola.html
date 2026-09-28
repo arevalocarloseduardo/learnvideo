@@ -1,0 +1,30 @@
+{% if videos %}
+<div class="tabla-marco">
+  <table>
+    <thead>
+      <tr><th>Video</th><th>Canal</th><th>Pista</th><th>Estado</th><th class="num">Clips</th></tr>
+    </thead>
+    <tbody>
+      {% for v in videos %}
+      <tr data-estado="{{ v.estado }}">
+        <td><span class="titulo-celda" title="{{ v.titulo or v.url }}">{{ v.titulo or v.url }}</span></td>
+        <td class="tenue">{{ v.canal or '—' }}</td>
+        <td class="tenue">{{ p.nombres.get(v.pista, 'Muestra las dos' if v.pista == 'mixto' else '—') }}</td>
+        <td>
+          {% if v.estado == 'listo' %}<span class="chip chip--bien">listo</span>
+          {% elif v.estado == 'error' %}<span class="chip chip--mal">error</span>
+            <span class="muy-tenue" style="display:block;font-size:.8125rem;margin-top:4px">{{ v.error }}</span>
+            <button class="boton boton--fantasma boton--chico" type="button" data-reintentar-video="{{ v.id }}">Reintentar</button>
+          {% elif v.estado == 'bajando' %}<span class="chip">bajando…</span>
+          {% elif v.estado == 'procesando' %}<span class="chip">cortando en clips…</span>
+          {% else %}<span class="chip">en cola</span>{% endif %}
+        </td>
+        <td class="num">{{ v.clips }}{% if v.descartados %} <span class="muy-tenue" title="Descartados por tener mucho color para una imagen en blanco y negro">(−{{ v.descartados }})</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="muy-tenue">Todavía no cargaste ningún video.</p>
+{% endif %}

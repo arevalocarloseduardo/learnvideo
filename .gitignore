@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+data/
+data-prueba/
+*.db
+*.log
+.DS_Store
+.claude/settings.local.json
